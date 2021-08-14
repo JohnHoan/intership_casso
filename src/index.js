@@ -5,8 +5,7 @@ const query = require("./query");
 
 const setupBrowser = async () => {
     let browser = await puppeteer.launch({
-        headless: false,
-        args: ["--no-sandbox", "--enable-popup-blocking"],
+        headless: true,
     });
 
     // browser.on("targetcreated", async (target) => {
