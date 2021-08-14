@@ -4,10 +4,10 @@ const helper = require("./helper");
 
 // create the connection to database
 const connection = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "20041999",
-    database: "internship_casso",
+    host: "vietqr.coxjs6slk9do.ap-southeast-1.rds.amazonaws.com",
+    user: "hoannv",
+    password: "vietqr.coxjs6slk9do.ap-southeast-1.rds.amazonaws.com",
+    database: "devgioi_hoan",
 });
 
 // insert to domains
