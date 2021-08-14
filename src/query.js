@@ -6,7 +6,7 @@ const helper = require("./helper");
 const connection = mysql.createConnection({
     host: "vietqr.coxjs6slk9do.ap-southeast-1.rds.amazonaws.com",
     user: "hoannv",
-    password: "vietqr.coxjs6slk9do.ap-southeast-1.rds.amazonaws.com",
+    password: "q2P3BJyvDuv9hDBv",
     database: "devgioi_hoan",
 });
 
