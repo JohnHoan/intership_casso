@@ -4,7 +4,7 @@ const query = require("./query");
 
 const setupBrowser = async () => {
     let browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         args: ["--no-sandbox"],
     });
 
