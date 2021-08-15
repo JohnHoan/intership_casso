@@ -136,11 +136,10 @@ const main = async () => {
     let domains = await helper.readDomains();
     // let domains = ["chonmua.com"];
     let browser = await setupBrowser();
-
+    let page = await setupPage(browser);
     for (let i = 0; i < domains.length; i++) {
         try {
             if (helper.isExist(domains[i])) continue;
-            let page = await setupPage(browser);
             let resFlow1 = await flow1(domains[i], page);
             if (resFlow1) {
                 // insert into database
@@ -154,7 +153,6 @@ const main = async () => {
                 }
                 helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
-                await page.close();
                 continue;
             }
             let resFlow2 = await flow2(domains[i], page);
@@ -170,19 +168,16 @@ const main = async () => {
                 }
                 helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
-                await page.close();
                 continue;
             }
             await query.insertDomain(domains[i], 0, "woocommerce");
             console.log(`${i}: ${domains[i]}: not_exist`);
             helper.write("no_exist", domains[i]);
-            await page.close();
         } catch (error) {
             console.log(error);
             await query.insertDomain(domains[i], null, "woocommerce");
             console.log(`${i}: ${domains[i]} MET ERROR`);
             helper.write("error", domains[i]);
-            await page.close();
             continue;
         }
     }
