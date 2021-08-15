@@ -4,7 +4,7 @@ const query = require("./query");
 
 const setupBrowser = async () => {
     let browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
     });
 
     // browser.on("targetcreated", async (target) => {
@@ -122,13 +122,13 @@ const flow2 = async (domain, page) => {
 };
 
 const main = async () => {
-    let domains = await helper.readDomains();
-    // let domains = ["hoahongdotham.com"];
+    // let domains = await helper.readDomains();
+    let domains = ["vietnamnay.com"];
     let browser = await setupBrowser();
     let page = await setupPage(browser);
     for (let i = 0; i < domains.length; i++) {
         try {
-            if (helper.isExist(domains[i])) continue;
+            // if (helper.isExist(domains[i])) continue;
             let resFlow1 = await flow1(domains[i], page);
             if (resFlow1) {
                 // insert into database
