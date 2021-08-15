@@ -7,21 +7,20 @@ const setupBrowser = async () => {
         headless: true,
         args: ["--no-sandbox"],
     });
-
-    // browser.on("targetcreated", async (target) => {
-    //     if (target.type() === "page") {
-    //         let page = await target.page();
-    //         let url = page.url();
-    //         if (url.search("site.com") == -1) {
-    //             await page.close();
-    //         }
-    //     }
-    // });
     return browser;
 };
 
 const setupPage = async (browser) => {
     let page = await browser.newPage();
+    browser.on("targetcreated", async (target) => {
+        if (target.type() === "page") {
+            let page = await target.page();
+            let url = page.url();
+            if (url.search("site.com") == -1) {
+                await page.close();
+            }
+        }
+    });
     page.setDefaultNavigationTimeout(60000);
     await page.setRequestInterception(true);
     page.on("request", (req) => {
@@ -140,21 +139,21 @@ const main = async () => {
     for (let i = 0; i < domains.length; i++) {
         try {
             if (helper.isExist(domains[i])) continue;
-            let resFlow1 = await flow1(domains[i], page);
-            if (resFlow1) {
-                // insert into database
-                let id = await query.insertDomain(
-                    domains[i],
-                    resFlow1.length,
-                    "woocommerce"
-                );
-                for (let i = 0; i < resFlow1.length; i++) {
-                    await query.insertGates(id, resFlow1[i]);
-                }
-                helper.write("found", domains[i]);
-                console.log(`${i}: ${domains[i]} Found`);
-                continue;
-            }
+            // let resFlow1 = await flow1(domains[i], page);
+            // if (resFlow1) {
+            //     // insert into database
+            //     let id = await query.insertDomain(
+            //         domains[i],
+            //         resFlow1.length,
+            //         "woocommerce"
+            //     );
+            //     for (let i = 0; i < resFlow1.length; i++) {
+            //         await query.insertGates(id, resFlow1[i]);
+            //     }
+            //     helper.write("found", domains[i]);
+            //     console.log(`${i}: ${domains[i]} Found`);
+            //     continue;
+            // }
             let resFlow2 = await flow2(domains[i], page);
             if (resFlow2) {
                 // insert into database
