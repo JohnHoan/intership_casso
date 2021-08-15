@@ -4,7 +4,8 @@ const query = require("./query");
 
 const setupBrowser = async () => {
     let browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
+        args: ["--no-sandbox"],
     });
 
     // browser.on("targetcreated", async (target) => {
@@ -21,10 +22,19 @@ const setupBrowser = async () => {
 
 const setupPage = async (browser) => {
     let page = await browser.newPage();
-    page.on("dialog", async (dialog) => {
-        await dialog.dismiss();
+    page.setDefaultNavigationTimeout(60000);
+    await page.setRequestInterception(true);
+    page.on("request", (req) => {
+        if (
+            req.resourceType() == "video" ||
+            req.resourceType() == "font" ||
+            req.resourceType() == "image"
+        ) {
+            req.abort();
+        } else {
+            req.continue();
+        }
     });
-    page.setDefaultNavigationTimeout(90000);
     return page;
 };
 
@@ -86,10 +96,10 @@ const flow1 = async (domain, page) => {
     if (!linkAPI) return false;
     let checked = await helper.hasAddToCart(linkAPI);
     if (!checked[0]) return false; // should return something to ended immediately
-    await page.goto(linkAPI, { waitUntil: "networkidle0" });
+    await page.goto(linkAPI, { waitUntil: "domcontentloaded" });
     await Promise.all([
         page.click(checked[1]),
-        page.waitForNavigation({ waitUntil: "networkidle0" }),
+        page.waitForNavigation({ waitUntil: "domcontentloaded" }),
     ]);
     let res = await finalStep(domain, page);
     return res;
@@ -101,7 +111,6 @@ const flow2 = async (domain, page) => {
     hrefs = [...new Set(hrefs)];
     hrefs = hrefs.filter((href) => href.includes("http"));
     let [start, end] = helper.setupLoop(hrefs);
-    // console.log(end - start);
     let nextlink = "";
     for (let i = start; i < end; i++) {
         checked = await helper.hasAddToCart(hrefs[i]);
@@ -113,8 +122,7 @@ const flow2 = async (domain, page) => {
     if (!nextlink) return false;
 
     await page.goto(nextlink, {
-        waitUntil: "load",
-        timeout: 90000,
+        waitUntil: "domcontentloaded",
     });
     await Promise.all([
         page.click(checked[1]),
@@ -126,9 +134,10 @@ const flow2 = async (domain, page) => {
 
 const main = async () => {
     let domains = await helper.readDomains();
-    // let domains = ["ecvn.com"];
+    // let domains = ["chonmua.com"];
     let browser = await setupBrowser();
     let page = await setupPage(browser);
+
     for (let i = 0; i < domains.length; i++) {
         try {
             if (helper.isExist(domains[i])) continue;
