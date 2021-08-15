@@ -64,10 +64,10 @@ const result = async (page) => {
             return data;
         });
         result = await helper.purifyGates(arr_gates);
+        return result;
     } catch (error) {
         return false;
     }
-    return result;
 };
 
 const finalStep = async (domain, page) => {
@@ -100,6 +100,7 @@ const flow2 = async (domain, page) => {
     hrefs = [...new Set(hrefs)];
     hrefs = hrefs.filter((href) => href.includes("http"));
     let [start, end] = helper.setupLoop(hrefs);
+    // console.log(end - start);
     let nextlink = "";
     for (let i = start; i < end; i++) {
         checked = await helper.hasAddToCart(hrefs[i]);
@@ -115,7 +116,7 @@ const flow2 = async (domain, page) => {
     });
     await Promise.all([
         page.click(checked[1]),
-        page.waitForNavigation({ timeout: 15000 }),
+        page.waitForNavigation({ timeout: 45000 }),
     ]);
     let res = await finalStep(domain, page);
     return res;
@@ -123,7 +124,7 @@ const flow2 = async (domain, page) => {
 
 const main = async () => {
     let domains = await helper.readDomains();
-    // let domains = ["vietnamnay.com"];
+    // let domains = ["ecvn.com"];
     let browser = await setupBrowser();
     let page = await setupPage(browser);
     for (let i = 0; i < domains.length; i++) {

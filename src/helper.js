@@ -56,7 +56,7 @@ const checkout = async (links) => {
 
 /* get all hrefs in the website */
 const getAllHrefs = async (url) => {
-    let response = await fetch(url, { timeout: 15000 });
+    let response = await fetch(url, { timeout: 45000 });
     let html = await response.text();
     let hrefs = getHrefs(html);
     return [...new Set(hrefs)];
@@ -78,7 +78,7 @@ const readDomains = async () => {
 const hasAddToCart = async (url) => {
     try {
         let link = encodeURI(url);
-        let response = await fetch(link, { timeout: 4000 });
+        let response = await fetch(link, { timeout: 10000 });
         let html = await response.text();
         let root = HTMLParser.parse(html);
         if (root.querySelector("button[name='add-to-cart']")) {
@@ -140,7 +140,7 @@ const setupLoop = (arr) => {
         return [start, end];
     } else if (arr.length < 150) {
         start = Math.floor(arr.length / 5);
-        end = Math.floor((arr.length * 9) / 10);
+        end = arr.length;
         return [start, end];
     } else {
         start = Math.floor(arr.length / 3);
