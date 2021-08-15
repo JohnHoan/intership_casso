@@ -160,9 +160,10 @@ const main = async () => {
                 continue;
             }
             await query.insertDomain(domains[i], 0, "woocommerce");
-            console.log(`${i}: ${domain}: not_exist`);
+            console.log(`${i}: ${domains[i]}: not_exist`);
             helper.write("no_exist", domains[i]);
         } catch (error) {
+            console.log(error);
             await query.insertDomain(domains[i], null, "woocommerce");
             console.log(`${i}: ${domains[i]} MET ERROR`);
             helper.write("error", domains[i]);

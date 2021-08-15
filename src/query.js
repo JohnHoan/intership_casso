@@ -19,25 +19,29 @@ const pool = mysql.createPool({
 const promisePool = pool.promise();
 // insert to domains
 const insertDomain = async (domain, num_gates, platform) => {
-    let sql = "SELECT id FROM websites WHERE domain =?";
-    let [rows, fields] = await promisePool.query(sql, [domain]);
-    if (rows.length > 0) {
-        // update
-        let sql = "UPDATE websites SET num_gates=? WHERE domain=?";
-        await promisePool.query(sql, [num_gates, domain]);
-        console.log("updated domain");
-        return rows[0]["id"];
-    } else {
-        // insert
-        let sql =
-            "INSERT INTO websites(domain,num_gates,platform) VALUES (?,?,?)";
-        let [rowsIn, fieldsIn] = await promisePool.query(sql, [
-            domain,
-            num_gates,
-            platform,
-        ]);
-        console.log("inserted domain");
-        return rowsIn["insertId"];
+    try {
+        let sql = "SELECT id FROM websites WHERE domain =?";
+        let [rows, fields] = await promisePool.query(sql, [domain]);
+        if (rows.length > 0) {
+            // update
+            let sql = "UPDATE websites SET num_gates=? WHERE domain=?";
+            await promisePool.query(sql, [num_gates, domain]);
+            console.log("updated domain");
+            return rows[0]["id"];
+        } else {
+            // insert
+            let sql =
+                "INSERT INTO websites(domain,num_gates,platform) VALUES (?,?,?)";
+            let [rows, fields] = await promisePool.query(sql, [
+                domain,
+                num_gates,
+                platform,
+            ]);
+            console.log("inserted domain");
+            return rows["insertId"];
+        }
+    } catch (error) {
+        console.log(error);
     }
 };
 
@@ -48,14 +52,16 @@ const insertGates = async (domain_id, gate) => {
         return;
     } else {
         let sql = "INSERT INTO payment_gates(domain_id,gate) VALUES (?,?)";
-        let [rowsIn, fieldsIn] = await promisePool.query(sql, [
-            domain_id,
-            gate,
-        ]);
+        await promisePool.query(sql, [domain_id, gate]);
         console.log("inserted gate");
         return;
     }
 };
+
+// (async () => {
+//     let res = await insertDomain("test1.com", 0, "woo");
+//     console.log(res);
+// })();
 
 module.exports = {
     insertDomain,
