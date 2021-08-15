@@ -1,6 +1,5 @@
 const puppeteer = require("puppeteer");
 const helper = require("./helper.js");
-const fs = require("fs");
 const query = require("./query");
 
 const setupBrowser = async () => {
@@ -56,12 +55,17 @@ const gotoCart = async (page) => {
 const result = async (page) => {
     let result;
     try {
-        result = await page.evaluate(
-            () => document.querySelector("#payment").innerHTML
-        );
+        let arr_gates = await page.evaluate(() => {
+            let data = [];
+            let ele = document.querySelectorAll("#payment > ul > li");
+            for (let i = 0; i < ele.length; i++) {
+                data.push(ele[i].className);
+            }
+            return data;
+        });
+        result = await helper.purifyGates(arr_gates);
     } catch (error) {
-        let url = page.url();
-        result = await helper.getHtml(url);
+        return false;
     }
     return result;
 };
@@ -96,7 +100,6 @@ const flow2 = async (domain, page) => {
     hrefs = [...new Set(hrefs)];
     hrefs = hrefs.filter((href) => href.includes("http"));
     let [start, end] = helper.setupLoop(hrefs);
-    console.log(end - start);
     let nextlink = "";
     for (let i = start; i < end; i++) {
         checked = await helper.hasAddToCart(hrefs[i]);
@@ -118,77 +121,49 @@ const flow2 = async (domain, page) => {
     return res;
 };
 
-const flow3 = async (domain, page) => {
-    let url = `http://${domain}/`;
-    let hrefs = await helper.getAllHrefs(url);
-    hrefs = [...new Set(hrefs)];
-    hrefs = hrefs.filter((href) => href.includes("http"));
-    let checkLink = "";
-    let end = hrefs.length;
-    for (let i = 0; i < end; i++) {
-        if (hrefs[i].includes("chinh-sach-thanh-toan")) {
-            checkLink = hrefs[i];
-            break;
-        }
-
-        if (hrefs[i].includes("ho-tro-thanh-toan")) {
-            checkLink = hrefs[i];
-            break;
-        }
-
-        if (hrefs[i].includes("phuong-thuc-thanh-toan")) {
-            checkLink = hrefs[i];
-            break;
-        }
-
-        if (hrefs[i].includes("hinh-thuc-thanh-toan")) {
-            checkLink = hrefs[i];
-            break;
-        }
-
-        if (hrefs[i].includes("huong-dan-thanh-toan")) {
-            checkLink = hrefs[i];
-            break;
-        }
-    }
-    if (!checkLink) return false;
-    let res = helper.getHtml(checkLink);
-};
-
 const main = async () => {
     let domains = await helper.readDomains();
-    // let domains = ["chonmua.com"];
+    // let domains = ["hoahongdotham.com"];
     let browser = await setupBrowser();
     let page = await setupPage(browser);
     for (let i = 0; i < domains.length; i++) {
         try {
-            console.log(domains[i]);
-            if (fs.existsSync(`./data/${domains[i]}.txt`)) continue;
             if (helper.isExist(domains[i])) continue;
             let resFlow1 = await flow1(domains[i], page);
             if (resFlow1) {
-                helper.saveResult(domains[i], resFlow1);
+                // insert into database
+                let id = await query.insertDomain(
+                    domains[i],
+                    resFlow1.length,
+                    "woocommerce"
+                );
+                for (let i = 0; i < resFlow1.length; i++) {
+                    await query.insertGates(id, resFlow1[i]);
+                }
                 helper.write("found", domains[i]);
-                console.log(`${domains[i]} Found`);
+                console.log(`${i}: ${domains[i]} Found`);
                 continue;
             }
             let resFlow2 = await flow2(domains[i], page);
             if (resFlow2) {
-                helper.saveResult(domains[i], resFlow2);
+                // insert into database
+                let id = await query.insertDomain(
+                    domains[i],
+                    resFlow2.length,
+                    "woocommerce"
+                );
+                for (let i = 0; i < resFlow2.length; i++) {
+                    await query.insertGates(id, resFlow2[i]);
+                }
                 helper.write("found", domains[i]);
-                console.log(`${domains[i]} Found`);
+                console.log(`${i}: ${domains[i]} Found`);
                 continue;
             }
-            let resFlow3 = await flow3(domains[i], page);
-            if (resFlow3) {
-                helper.saveResult(domains[i], resFlow3);
-                helper.write("found", domains[i]);
-                console.log(`${domains[i]} Found`);
-                continue;
-            }
-            console.log(`${domain}: not_exist`);
+            await query.insertDomain(domains[i], 0, "woocommerce");
+            console.log(`${i}: ${domain}: not_exist`);
             helper.write("no_exist", domains[i]);
         } catch (error) {
+            await query.insertDomain(domains[i], null, "woocommerce");
             console.log(`${i}: ${domains[i]} MET ERROR`);
             helper.write("error", domains[i]);
             continue;
@@ -202,7 +177,6 @@ const main = async () => {
     let start = new Date();
     let hrstart = process.hrtime();
     await main();
-    await query.runQuery();
     let end = new Date() - start;
     let hrend = process.hrtime(hrstart);
     console.log(`Execution time (hr): ${hrend[0]}`);

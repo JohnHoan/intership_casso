@@ -100,13 +100,6 @@ const hasAddToCart = async (url) => {
     }
 };
 
-/* to get html file by fetch  */
-const getHtml = async (url) => {
-    let response = await fetch(url);
-    let html = await response.text();
-    return html;
-};
-
 /* check if domain has done the task or not */
 const isExist = (domain) => {
     let error = fs.readFileSync("./src/error.txt", "utf8");
@@ -137,15 +130,6 @@ const hasAPILink = async (url) => {
     }
 };
 
-/* save file html result to folder data */
-const saveResult = (domain, res) => {
-    if (fs.existsSync(`./data/${domain}.txt`)) return;
-    fs.writeFile(`./data/${domain}.txt`, res, (err) => {
-        if (err) console.log("ERROR WRITE RES");
-    });
-    write("found", domain);
-};
-
 /* to reduce the link need to check, that will help performance */
 const setupLoop = (arr) => {
     let start;
@@ -166,22 +150,62 @@ const setupLoop = (arr) => {
 };
 
 /* use to extract data */
-const regexGates = async (str) => {
-    const regex =
-        /method_cod|method_bacs|onepay|momo|vtcpay|paypal|vnpay|nganluong|123pay|zalopay|baokim|smarklink|cheque|alepay|airpay|chuyển khoản|giao hàng/gm;
-    let m;
-    let methods = [];
-
-    while ((m = regex.exec(str)) !== null) {
-        if (m.index === regex.lastIndex) {
-            regex.lastIndex++;
+const purifyGates = async (arr) => {
+    let res = [];
+    for (let i = 0; i < arr.length; i++) {
+        let pGate = arr[i].split(" ")[1];
+        if (pGate.includes("method_bacs")) {
+            res.push("method_bacs");
+            continue;
+        } else if (pGate.includes("method_cod")) {
+            res.push("method_cod");
+            continue;
+        } else if (pGate.includes("momo")) {
+            res.push("momo");
+            continue;
+        } else if (pGate.includes("paypal")) {
+            res.push("paypal");
+            continue;
+        } else if (pGate.includes("onepay")) {
+            res.push("onepay");
+            continue;
+        } else if (pGate.includes("vtcpay")) {
+            res.push("vtcpay");
+            continue;
+        } else if (pGate.includes("vnpay")) {
+            res.push("vnpay");
+            continue;
+        } else if (pGate.includes("nganluong")) {
+            res.push("ngangluong");
+            continue;
+        } else if (pGate.includes("123pay")) {
+            res.push("123pay");
+            continue;
+        } else if (pGate.includes("zalopay")) {
+            res.push("zalopay");
+            continue;
+        } else if (pGate.includes("baokim")) {
+            res.push("baokim");
+            continue;
+        } else if (pGate.includes("smartlink")) {
+            res.push("smartlink");
+            continue;
+        } else if (pGate.includes("cheque")) {
+            res.push("cheque");
+            continue;
+        } else if (pGate.includes("alepay")) {
+            res.push("alepay");
+            continue;
+        } else if (pGate.includes("airpay")) {
+            res.push("airpay");
+            continue;
+        } else {
+            res.push(pGate);
         }
-        if (m[0] === "chuyển khoản") m[0] = "method_bacs";
-        if (m[0] === "giao hàng") m[0] = "method_cod";
-        methods.push(m[0]);
     }
-    return [...new Set(methods)];
+    return res;
 };
+
 module.exports = {
     addToCart,
     cart,
@@ -189,11 +213,9 @@ module.exports = {
     getAllHrefs,
     readDomains,
     hasAddToCart,
-    getHtml,
     isExist,
     write,
     hasAPILink,
-    saveResult,
     setupLoop,
-    regexGates,
+    purifyGates,
 };

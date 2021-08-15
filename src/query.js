@@ -1,55 +1,63 @@
 const mysql = require("mysql2");
-const fs = require("fs");
 const helper = require("./helper");
 
 // create the connection to database
-const connection = mysql.createConnection({
+const pool = mysql.createPool({
     host: "vietqr.coxjs6slk9do.ap-southeast-1.rds.amazonaws.com",
     user: "hoannv",
     password: "q2P3BJyvDuv9hDBv",
     database: "devgioi_hoan",
 });
 
+// const pool = mysql.createPool({
+//     host: "localhost",
+//     user: "root",
+//     password: "20041999",
+//     database: "internship_casso",
+// });
+
+const promisePool = pool.promise();
 // insert to domains
-const insertGate = async (domain, gate, platform) => {
-    const sql =
-        "INSERT INTO payment_gates(domain,gate,platform) SELECT * FROM (SELECT ? AS domain, ? AS gate, ? AS platform)\
-        AS temp WHERE NOT EXISTS (SELECT domain,gate, platform FROM payment_gates WHERE domain = ? AND gate=? AND platform=?) LIMIT 1";
-    connection.query(
-        sql,
-        [domain, gate, platform, domain, gate, platform],
-        function (err, results, fields) {
-            // console.log(results); results contains rows returned by server
-            if (results) {
-                console.log("Inserted successful");
-            }
-        }
-    );
+const insertDomain = async (domain, num_gates, platform) => {
+    let sql = "SELECT id FROM websites WHERE domain =?";
+    let [rows, fields] = await promisePool.query(sql, [domain]);
+    if (rows.length > 0) {
+        // update
+        let sql = "UPDATE websites SET num_gates=? WHERE domain=?";
+        await promisePool.query(sql, [num_gates, domain]);
+        console.log("updated domain");
+        return rows[0]["id"];
+    } else {
+        // insert
+        let sql =
+            "INSERT INTO websites(domain,num_gates,platform) VALUES (?,?,?)";
+        let [rowsIn, fieldsIn] = await promisePool.query(sql, [
+            domain,
+            num_gates,
+            platform,
+        ]);
+        console.log("inserted domain");
+        return rows[0]["id"];
+    }
 };
 
-const runQuery = async () => {
-    let domains = await helper.readDomains();
-    let errorFile = fs.readFileSync("./src/error.txt", "utf8");
-    for (let i = 0; i < domains.length; i++) {
-        if (fs.existsSync(`./data/${domains[i]}.txt`)) {
-            const html = fs.readFileSync(`./data/${domains[i]}.txt`, "utf8");
-            let methods = await helper.regexGates(html);
-            console.log(`${i} ${domains[i]}: ${methods}`);
-            if (methods.length == 0) {
-                insertGate(domains[i], "KoTonTai", "woocommerce");
-            } else {
-                methods.map((method) => {
-                    insertGate(domains[i], method, "woocommerce");
-                });
-            }
-        } else if (errorFile.includes(domains[i])) {
-            insertGate(domains[i], "KoXacDinh", "woocommerce");
-        } else {
-            insertGate(domains[i], "KoTonTai", "woocommerce");
-        }
+const insertGates = async (domain_id, gate) => {
+    let sql = "SELECT id FROM payment_gates WHERE domain_id =? AND gate=?";
+    let [rows, fields] = await promisePool.query(sql, [domain_id, gate]);
+    if (rows.length > 0) {
+        return;
+    } else {
+        let sql = "INSERT INTO payment_gates(domain_id,gate) VALUES (?,?)";
+        let [rowsIn, fieldsIn] = await promisePool.query(sql, [
+            domain_id,
+            gate,
+        ]);
+        console.log("inserted gate");
+        return;
     }
-    return;
 };
+
 module.exports = {
-    runQuery,
+    insertDomain,
+    insertGates,
 };
