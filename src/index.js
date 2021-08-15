@@ -31,14 +31,14 @@ const gotoCheckout = async (page) => {
     try {
         await Promise.all([
             page.click("[class='checkout-button button alt wc-forward']"),
-            page.waitForNavigation({ waitUntil: "domcontentloaded" }),
+            page.waitForNavigation({ waitUntil: "networkidle0" }),
         ]);
     } catch (error) {
         let url = page.url();
         let hrefs = await helper.getAllHrefs(url);
         let checkoutlink = await helper.checkout(hrefs);
         if (!checkoutlink) return false;
-        await page.goto(checkoutlink, { waitUntil: "domcontentloaded" });
+        await page.goto(checkoutlink, { waitUntil: "networkidle0" });
     }
     return page;
 };
@@ -48,7 +48,7 @@ const gotoCart = async (page) => {
     let hrefs = await helper.getAllHrefs(url);
     let cartLink = await helper.cart(hrefs);
     if (!cartLink) return false;
-    await page.goto(cartLink, { waitUntil: "domcontentloaded" });
+    await page.goto(cartLink, { waitUntil: "networkidle0" });
     return page;
 };
 
@@ -85,10 +85,10 @@ const flow1 = async (domain, page) => {
     if (!linkAPI) return false;
     let checked = await helper.hasAddToCart(linkAPI);
     if (!checked[0]) return false; // should return something to ended immediately
-    await page.goto(linkAPI, { waitUntil: "domcontentloaded" });
+    await page.goto(linkAPI, { waitUntil: "networkidle0" });
     await Promise.all([
         page.click(checked[1]),
-        page.waitForNavigation({ waitUntil: "domcontentloaded" }),
+        page.waitForNavigation({ waitUntil: "networkidle0" }),
     ]);
     let res = await finalStep(domain, page);
     return res;
@@ -112,7 +112,8 @@ const flow2 = async (domain, page) => {
     if (!nextlink) return false;
 
     await page.goto(nextlink, {
-        waitUntil: "domcontentloaded",
+        waitUntil: "networkidle0",
+        timeout,
     });
     await Promise.all([
         page.click(checked[1]),
