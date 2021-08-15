@@ -37,7 +37,7 @@ const insertDomain = async (domain, num_gates, platform) => {
             platform,
         ]);
         console.log("inserted domain");
-        return rows[0]["id"];
+        return rowsIn["insertId"];
     }
 };
 
