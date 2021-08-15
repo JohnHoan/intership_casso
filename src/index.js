@@ -24,6 +24,7 @@ const setupPage = async (browser) => {
     page.on("dialog", async (dialog) => {
         await dialog.dismiss();
     });
+    page.setDefaultNavigationTimeout(90000);
     return page;
 };
 
@@ -112,8 +113,8 @@ const flow2 = async (domain, page) => {
     if (!nextlink) return false;
 
     await page.goto(nextlink, {
-        waitUntil: "networkidle0",
-        timeout,
+        waitUntil: "load",
+        timeout: 90000,
     });
     await Promise.all([
         page.click(checked[1]),
