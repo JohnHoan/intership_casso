@@ -174,15 +174,15 @@ const main = async () => {
                 continue;
             }
             await query.insertDomain(domains[i], 0, "woocommerce");
-            await page.close();
             console.log(`${i}: ${domains[i]}: not_exist`);
             helper.write("no_exist", domains[i]);
+            await page.close();
         } catch (error) {
             console.log(error);
             await query.insertDomain(domains[i], null, "woocommerce");
-            await page.close();
             console.log(`${i}: ${domains[i]} MET ERROR`);
             helper.write("error", domains[i]);
+            await page.close();
             continue;
         }
     }
