@@ -109,7 +109,7 @@ const flow2 = async (domain, page) => {
     let hrefs = await helper.getAllHrefs(url);
     hrefs = [...new Set(hrefs)];
     hrefs = hrefs.filter((href) => href.includes("http"));
-    let checkCart = helper.cart(hrefs);
+    let checkCart = await helper.cart(hrefs);
     if (!checkCart) return false;
     let [start, end] = helper.setupLoop(hrefs);
     console.log(end - start);
