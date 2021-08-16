@@ -12,15 +12,15 @@ const setupBrowser = async () => {
 
 const setupPage = async (browser) => {
     let page = await browser.newPage();
-    browser.on("targetcreated", async (target) => {
-        if (target.type() === "page") {
-            let page = await target.page();
-            let url = page.url();
-            if (url.search("site.com") == -1) {
-                await page.close();
-            }
-        }
-    });
+   // browser.on("targetcreated", async (target) => {
+      //  if (target.type() === "page") {
+        //    let page = await target.page();
+          //  let url = page.url();
+          //  if (url.search("site.com") == -1) {
+            //    await page.close();
+           // }
+       // }
+   // });
     page.setDefaultNavigationTimeout(60000);
     await page.setRequestInterception(true);
     page.on("request", (req) => {
@@ -41,14 +41,14 @@ const gotoCheckout = async (page) => {
     try {
         await Promise.all([
             page.click("[class='checkout-button button alt wc-forward']"),
-            page.waitForNavigation({ waitUntil: "networkidle0" }),
+            page.waitForNavigation({ waitUntil: "domcontentloaded" }),
         ]);
     } catch (error) {
         let url = page.url();
         let hrefs = await helper.getAllHrefs(url);
         let checkoutlink = await helper.checkout(hrefs);
         if (!checkoutlink) return false;
-        await page.goto(checkoutlink, { waitUntil: "networkidle0" });
+        await page.goto(checkoutlink, { waitUntil: "domcontentloaded" });
     }
     return page;
 };
@@ -58,7 +58,7 @@ const gotoCart = async (page) => {
     let hrefs = await helper.getAllHrefs(url);
     let cartLink = await helper.cart(hrefs);
     if (!cartLink) return false;
-    await page.goto(cartLink, { waitUntil: "networkidle0" });
+    await page.goto(cartLink, { waitUntil: "domcontentloaded" });
     return page;
 };
 
@@ -110,6 +110,7 @@ const flow2 = async (domain, page) => {
     hrefs = [...new Set(hrefs)];
     hrefs = hrefs.filter((href) => href.includes("http"));
     let [start, end] = helper.setupLoop(hrefs);
+    console.log(end-start);
     let nextlink = "";
     for (let i = start; i < end; i++) {
         checked = await helper.hasAddToCart(hrefs[i]);
@@ -125,7 +126,7 @@ const flow2 = async (domain, page) => {
     });
     await Promise.all([
         page.click(checked[1]),
-        page.waitForNavigation({ timeout: 45000 }),
+        page.waitForNavigation(),
     ]);
     let res = await finalStep(domain, page);
     return res;
@@ -139,21 +140,21 @@ const main = async () => {
     for (let i = 0; i < domains.length; i++) {
         try {
             if (helper.isExist(domains[i])) continue;
-            // let resFlow1 = await flow1(domains[i], page);
-            // if (resFlow1) {
-            //     // insert into database
-            //     let id = await query.insertDomain(
-            //         domains[i],
-            //         resFlow1.length,
-            //         "woocommerce"
-            //     );
-            //     for (let i = 0; i < resFlow1.length; i++) {
-            //         await query.insertGates(id, resFlow1[i]);
-            //     }
-            //     helper.write("found", domains[i]);
-            //     console.log(`${i}: ${domains[i]} Found`);
-            //     continue;
-            // }
+             let resFlow1 = await flow1(domains[i], page);
+             if (resFlow1) {
+                 // insert into database
+                 let id = await query.insertDomain(
+                     domains[i],
+                     resFlow1.length,
+                     "woocommerce"
+                 );
+                 for (let i = 0; i < resFlow1.length; i++) {
+                     await query.insertGates(id, resFlow1[i]);
+                 }
+                 helper.write("found", domains[i]);
+                 console.log(`${i}: ${domains[i]} Found`);
+                 continue;
+             }
             let resFlow2 = await flow2(domains[i], page);
             if (resFlow2) {
                 // insert into database
