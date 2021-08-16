@@ -4,7 +4,7 @@ const query = require("./query");
 
 const setupBrowser = async () => {
     let browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
         args: ["--no-sandbox"],
     });
     return browser;
@@ -49,12 +49,21 @@ const clickOptions = async (page) => {
         return false;
     }
 };
+
 const gotoCheckout = async (page) => {
     try {
-        await Promise.all([
-            page.click("[class='checkout-button button alt wc-forward']"),
-            page.waitForNavigation({ waitUntil: "domcontentloaded" }),
-        ]);
+        let url = await page.evaluate(() => {
+            let element = document.querySelector(
+                "a[class='checkout-button button alt wc-forward']"
+            );
+            return element.href;
+        });
+        await page.goto(url, { waitUntil: "domcontentloaded" });
+        // let test = await page.waitForSelector(
+        //     "[class='checkout-button button alt wc-forward']"
+        // );
+        // console.log(test);
+        // await page.click("[class='checkout-button button alt wc-forward']");
     } catch (error) {
         let url = page.url();
         let hrefs = await helper.getAllHrefs(url);
@@ -110,15 +119,13 @@ const flow1 = async (domain, page) => {
     await page.goto(linkAPI, { waitUntil: "domcontentloaded" });
     let page1 = await clickOptions(page);
     if (page1) {
-        console.log("clicked options");
+        console.log("clicked option");
         await page1.waitForSelector(checked[1]);
-        await Promise.all([
-            page1.click(checked[1]),
-            page1.waitForNavigation({ waitUntil: "domcontentloaded" }),
-        ]);
+        await page1.click(checked[1]);
         let res = await finalStep(page1);
         return res;
     }
+    console.log("nope");
     await page.waitForSelector(checked[1]);
     await Promise.all([
         page.click(checked[1]),
@@ -139,6 +146,7 @@ const flow2 = async (domain, page) => {
     console.log(end - start);
     let nextlink = "";
     for (let i = start; i < end; i++) {
+        console.log(hrefs[i]);
         checked = await helper.hasAddToCart(hrefs[i]);
         if (checked[0]) {
             nextlink = hrefs[i];
@@ -146,93 +154,79 @@ const flow2 = async (domain, page) => {
         }
     }
     if (!nextlink) return false;
-    await page.goto(nextlink, {
-        waitUntil: "domcontentloaded",
-    });
+
+    await page.goto(nextlink);
+    console.log("1");
     let page1 = await clickOptions(page);
+    console.log("2");
     if (page1) {
         console.log("clicked options");
         await page1.waitForSelector(checked[1]);
-        await Promise.all([
-            page1.click(checked[1]),
-            page1.waitForNavigation({ waitUntil: "domcontentloaded" }),
-        ]);
+        await page1.click(checked[1]);
         let res = await finalStep(page1);
         return res;
     }
-    await page.waitForSelector(checked[1]);
-    await Promise.all([
-        page.click(checked[1]),
-        page.waitForNavigation({ waitUntil: "domcontentloaded" }),
-    ]);
+    console.log("no");
+
+    let btn = await page.evaluate(() => {
+        return document.querySelector(checked[1]);
+    });
+    await btn.click();
+    // await page.waitForSelector(checked[1]);
+    // await page.click(checked[1]);
+    await page.waitForNavigation({ waitUntil: "load" });
     let res = await finalStep(page);
     return res;
 };
 
 const main = async () => {
-    let domains = await helper.readDomains();
-    // let domains = ["maohiemstore.vn", "saigonhoa.com"];
+    // let domains = await helper.readDomains();
+    let domains = ["suaongchua.com.vn"];
     let browser = await setupBrowser();
     let page = await setupPage(browser);
     for (let i = 0; i < domains.length; i++) {
         try {
-            if (helper.isExist(domains[i])) continue;
+            // if (helper.isExist(domains[i])) continue;
             let resFlow1 = await flow1(domains[i], page);
             if (resFlow1) {
-                // console.log(resFlow1);
+                console.log(resFlow1);
                 // insert into database
-                let id = await query.insertDomain(
-                    domains[i],
-                    resFlow1.length,
-                    "woocommerce"
-                );
-                for (let i = 0; i < resFlow1.length; i++) {
-                    await query.insertGates(id, resFlow1[i]);
-                }
-                helper.write("found", domains[i]);
+                // let id = await query.insertDomain(
+                //     domains[i],
+                //     resFlow1.length,
+                //     "woocommerce"
+                // );
+                // for (let i = 0; i < resFlow1.length; i++) {
+                //     await query.insertGates(id, resFlow1[i]);
+                // }
+                // helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
-                let pages = await browser.pages();
-                if (pages.length > 2) {
-                    await pages[pages.length - 1].close();
-                }
                 continue;
             }
             let resFlow2 = await flow2(domains[i], page);
             if (resFlow2) {
-                // console.log(resFlow2);
+                console.log(resFlow2);
                 // insert into database
-                let id = await query.insertDomain(
-                    domains[i],
-                    resFlow2.length,
-                    "woocommerce"
-                );
-                for (let i = 0; i < resFlow2.length; i++) {
-                    await query.insertGates(id, resFlow2[i]);
-                }
-                helper.write("found", domains[i]);
+                // let id = await query.insertDomain(
+                //     domains[i],
+                //     resFlow2.length,
+                //     "woocommerce"
+                // );
+                // for (let i = 0; i < resFlow2.length; i++) {
+                //     await query.insertGates(id, resFlow2[i]);
+                // }
+                // helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
-                let pages = await browser.pages();
-                if (pages.length > 2) {
-                    await pages[pages.length - 1].close();
-                }
                 continue;
             }
-            await query.insertDomain(domains[i], 0, "woocommerce");
+            // await query.insertDomain(domains[i], 0, "woocommerce");
             console.log(`${i}: ${domains[i]}: not_exist`);
-            helper.write("no_exist", domains[i]);
-            let pages = await browser.pages();
-            if (pages.length > 2) {
-                await pages[pages.length - 1].close();
-            }
+            // helper.write("no_exist", domains[i]);
         } catch (error) {
             console.log(error);
-            await query.insertDomain(domains[i], null, "woocommerce");
+            // await query.insertDomain(domains[i], null, "woocommerce");
             console.log(`${i}: ${domains[i]} MET ERROR`);
-            helper.write("error", domains[i]);
-            let pages = await browser.pages();
-            if (pages.length > 2) {
-                await pages[pages.length - 1].close();
-            }
+            // helper.write("error", domains[i]);
             continue;
         }
     }
