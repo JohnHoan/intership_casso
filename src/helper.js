@@ -5,7 +5,7 @@ const getHrefs = require("get-hrefs");
 
 /* find add-to-cart href in hrefs*/
 const addToCart = async (hrefs) => {
-    let res = "";
+    let res;
     let end = hrefs.length;
     for (let i = 0; i < end; i++) {
         if (hrefs[i].includes("add-to-cart")) {
@@ -75,9 +75,10 @@ const readDomains = async () => {
 };
 
 /* check if link product has button add-to-cart */
-const hasAddToCart = async (url) => {
+const hasAddToCart = async (domain, url) => {
     try {
         let link = encodeURI(url);
+        if (!link.includes("http")) link = `http://${domain}${url}`;
         let response = await fetch(link, { timeout: 10000 });
         let html = await response.text();
         let root = HTMLParser.parse(html);
@@ -113,9 +114,9 @@ const isExist = (domain) => {
 
 /* Write data to file, cache it to regex later on */
 const write = (type, data) => {
-    if (isExist(data)) return;
+    // if (isExist(data)) return;
     fs.appendFile(`./src/${type}.txt`, `\n${data}`, function (err) {
-        if (err) console.log("ERROR WRITE");
+        // if (err) console.log("ERROR WRITE");
     });
 };
 
