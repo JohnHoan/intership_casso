@@ -26,7 +26,7 @@ const insertDomain = async (domain, num_gates, platform) => {
             // update
             let sql = "UPDATE websites SET num_gates=? WHERE domain=?";
             await promisePool.query(sql, [num_gates, domain]);
-            console.log("updated domain");
+            // console.log("updated domain");
             return rows[0]["id"];
         } else {
             // insert
@@ -37,11 +37,12 @@ const insertDomain = async (domain, num_gates, platform) => {
                 num_gates,
                 platform,
             ]);
-            console.log("inserted domain");
+            // console.log("inserted domain");
             return rows["insertId"];
         }
     } catch (error) {
-        console.log(error);
+        // console.log(error);
+        return;
     }
 };
 
@@ -53,7 +54,7 @@ const insertGates = async (domain_id, gate) => {
     } else {
         let sql = "INSERT INTO payment_gates(domain_id,gate) VALUES (?,?)";
         await promisePool.query(sql, [domain_id, gate]);
-        console.log("inserted gate");
+        // console.log("inserted gate");
         return;
     }
 };
