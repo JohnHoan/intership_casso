@@ -208,7 +208,7 @@ const main = async () => {
                     await query.insertGates(id, resFlow1[i]);
                 }
                 helper.write("found", domains[i]);
-                // console.log(`${i}: ${domains[i]} Found`);
+                console.log(`${i}: ${domains[i]} Found`);
                 let pages = await browser.pages();
                 if (pages.length > 2) {
                     await pages[pages.length - 1].close();
@@ -229,7 +229,7 @@ const main = async () => {
                     await query.insertGates(id, resFlow2[i]);
                 }
                 helper.write("found", domains[i]);
-                // console.log(`${i}: ${domains[i]} Found`);
+                console.log(`${i}: ${domains[i]} Found`);
                 let pages = await browser.pages();
                 if (pages.length > 2) {
                     await pages[pages.length - 1].close();
@@ -249,7 +249,7 @@ const main = async () => {
                     await query.insertGates(id, resFlow3[i]);
                 }
                 helper.write("found", domains[i]);
-                // console.log(`${i}: ${domains[i]} Found`);
+                console.log(`${i}: ${domains[i]} Found`);
                 let pages = await browser.pages();
                 if (pages.length > 2) {
                     await pages[pages.length - 1].close();
@@ -257,15 +257,16 @@ const main = async () => {
                 continue;
             }
             await query.insertDomain(domains[i], 0, "woocommerce");
-            // console.log(`${i}: ${domains[i]}: not_exist`);
+            console.log(`${i}: ${domains[i]}: not_exist`);
             helper.write("no_exist", domains[i]);
             let pages = await browser.pages();
             if (pages.length > 2) {
                 await pages[pages.length - 1].close();
             }
         } catch (error) {
+            console.log(error);
             await query.insertDomain(domains[i], null, "woocommerce");
-            // console.log(`${i}: ${domains[i]} MET ERROR`);
+            console.log(`${i}: ${domains[i]} MET ERROR`);
             helper.write("error", domains[i]);
             let pages = await browser.pages();
             if (pages.length > 2) {
@@ -279,11 +280,11 @@ const main = async () => {
 };
 
 (async () => {
-    // let start = new Date();
-    // let hrstart = process.hrtime();
+    let start = new Date();
+    let hrstart = process.hrtime();
     await main();
-    // let end = new Date() - start;
-    // let hrend = process.hrtime(hrstart);
-    // console.log(`Execution time (hr): ${hrend[0]}`);
+    let end = new Date() - start;
+    let hrend = process.hrtime(hrstart);
+    console.log(`Execution time (hr): ${hrend[0]}`);
     return;
 })();
