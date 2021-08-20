@@ -148,6 +148,7 @@ const flow3 = async (domain, page) => {
     console.log(end - start);
     let nextlink = "";
     for (let i = start; i < end; i++) {
+        console.log(hrefs[i]);
         checked = await helper.hasAddToCart(domain, hrefs[i]);
         if (checked[0]) {
             nextlink = hrefs[i];
@@ -195,12 +196,12 @@ const main = async () => {
     for (let i = 0; i < domains.length; i++) {
         try {
             if (helper.isExist(domains[i])) continue;
-
+            console.log(`running: ${domains[i]}`);
             let resFlow1 = await flow1(domains[i], page);
             if (resFlow1) {
-                // console.log(resFlow1);
+                console.log(resFlow1);
                 // insert into database
-                await insertData(resFlow1, domains[i]);
+                // await insertData(resFlow1, domains[i]);
                 // await closePage(browser);
                 helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
@@ -209,24 +210,24 @@ const main = async () => {
 
             let resFlow2 = await flow2(domains[i], page);
             if (resFlow2) {
-                // console.log(resFlow2);
+                console.log(resFlow2);
                 // insert into database
-                await insertData(resFlow2, domains[i]);
+                // await insertData(resFlow2, domains[i]);
                 // await closePage(browser);
                 helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
                 continue;
             }
-            let resFlow3 = await flow3(domains[i], page);
-            if (resFlow3) {
-                console.log(resFlow3);
-                // insert into database
-                await insertData(resFlow3, domains[i]);
-                // await closePage(browser);
-                helper.write("found", domains[i]);
-                console.log(`${i}: ${domains[i]} Found`);
-                continue;
-            }
+            // let resFlow3 = await flow3(domains[i], page);
+            // if (resFlow3) {
+            //     console.log(resFlow3);
+            //     // insert into database
+            //     // await insertData(resFlow3, domains[i]);
+            //     // await closePage(browser);
+            //     helper.write("found", domains[i]);
+            //     console.log(`${i}: ${domains[i]} Found`);
+            //     continue;
+            // }
             await query.insertDomain(domains[i], 0, "woocommerce");
             // await closePage(browser);
             helper.write("no_exist", domains[i]);
