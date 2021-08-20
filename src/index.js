@@ -4,7 +4,7 @@ const query = require("./query");
 
 const setupBrowser = async () => {
     let browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
         args: ["--no-sandbox"],
     });
     return browser;
@@ -37,16 +37,16 @@ const setupPage = async (browser) => {
     return page;
 };
 
-const clickOptions = async (page) => {
+const hasOptions = async (page) => {
     try {
+        let optionClass = "";
         let a = await page.evaluate(() => {
             let res = document.querySelector("td > div > div");
             if (!res) res = document.querySelector("td > ul > li");
             return res.className;
         });
-
-        await page.click(`[class='${a}']`);
-        return page;
+        optionClass = `[class='${a}']`;
+        return optionClass;
     } catch (error) {
         return false;
     }
@@ -104,6 +104,19 @@ const finalStep = async (domain, page) => {
     return res;
 };
 
+const flow1 = async (domain, page) => {
+    let url = `http://${domain}/`;
+    let hrefs = await helper.getAllHrefs(url);
+    hrefs = [...new Set(hrefs)];
+    let nextlink = await helper.addToCart(hrefs);
+    if (!nextlink) return false;
+    if (!nextlink.includes("http")) nextlink = `${url}${nextlink}`;
+    await page.goto(url, { waitUntil: "domcontentloaded" });
+    await page.goto(nextlink, { waitUntil: "domcontentloaded" });
+    let res = finalStep(domain, page);
+    return res;
+};
+
 const flow2 = async (domain, page) => {
     let url = `http://${domain}/wp-json/wp/v2/product`;
     let linkAPI = await helper.hasAPILink(url);
@@ -111,16 +124,9 @@ const flow2 = async (domain, page) => {
     let checked = await helper.hasAddToCart(domain, linkAPI);
     if (!checked[0]) return false; // should return something to ended immediately
     await page.goto(linkAPI, { waitUntil: "domcontentloaded" });
-    let page1 = await clickOptions(page);
-    if (page1) {
-        console.log("clicked options");
-        await page1.waitForSelector(checked[1]);
-        await Promise.all([
-            page1.click(checked[1]),
-            page1.waitForNavigation({ waitUntil: "domcontentloaded" }),
-        ]);
-        let res = await finalStep(domain,page1);
-        return res;
+    let option = await hasOptions(page);
+    if (option) {
+        await page.click(option);
     }
     await page.waitForSelector(checked[1]);
     await Promise.all([
@@ -153,18 +159,10 @@ const flow3 = async (domain, page) => {
     await page.goto(nextlink, {
         waitUntil: "domcontentloaded",
     });
-    let page1 = await clickOptions(page);
-    if (page1) {
-        console.log("clicked options");
-        await page1.waitForSelector(checked[1]);
-        await Promise.all([
-            page1.click(checked[1]),
-            page1.waitForNavigation({ waitUntil: "domcontentloaded" }),
-        ]);
-        let res = await finalStep(domain,page1);
-        return res;
+    let option = await hasOptions(page);
+    if (option) {
+        await page.click(option);
     }
-    await page.waitForSelector(checked[1]);
     await Promise.all([
         page.click(checked[1]),
         page.waitForNavigation({ waitUntil: "domcontentloaded" }),
@@ -173,22 +171,23 @@ const flow3 = async (domain, page) => {
     return res;
 };
 
-const flow1 = async (domain, page) => {
-    let url = `http://${domain}/`;
-    let hrefs = await helper.getAllHrefs(url);
-    hrefs = [...new Set(hrefs)];
-    let nextlink = await helper.addToCart(hrefs);
-    if (!nextlink) return false;
-    if (!nextlink.includes("http")) nextlink = `${url}${nextlink}`;
-    await page.goto(url, { waitUntil: "domcontentloaded" });
-    await page.goto(nextlink,{waitUntil: "domcontentloaded"});
-    let res = finalStep(domain, page);
-    return res;
+const insertData = async (data, domain) => {
+    let id = await query.insertDomain(domain, data.length, "woocommerce");
+    for (let i = 0; i < data.length; i++) {
+        await query.insertGates(id, data[i]);
+    }
+};
+
+const closePage = async (browser) => {
+    let pages = await browser.pages();
+    if (!pages.length > 2) return;
+    await pages[pages.length - 1].close();
+    return;
 };
 
 const main = async () => {
     let domains = await helper.readDomains();
-    // let domains = ["imfriday.com"];
+    // let domains = ["dienmaygiadinh.com.vn"];
     let browser = await setupBrowser();
     let page = await setupPage(browser);
     for (let i = 0; i < domains.length; i++) {
@@ -199,20 +198,10 @@ const main = async () => {
             if (resFlow1) {
                 // console.log(resFlow1);
                 // insert into database
-                let id = await query.insertDomain(
-                    domains[i],
-                    resFlow1.length,
-                    "woocommerce"
-                );
-                for (let i = 0; i < resFlow1.length; i++) {
-                    await query.insertGates(id, resFlow1[i]);
-                }
+                await insertData(resFlow1, domains[i]);
+                await closePage(browser);
                 helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
-                let pages = await browser.pages();
-                if (pages.length > 2) {
-                    await pages[pages.length - 1].close();
-                }
                 continue;
             }
 
@@ -220,58 +209,32 @@ const main = async () => {
             if (resFlow2) {
                 // console.log(resFlow2);
                 // insert into database
-                let id = await query.insertDomain(
-                    domains[i],
-                    resFlow2.length,
-                    "woocommerce"
-                );
-                for (let i = 0; i < resFlow2.length; i++) {
-                    await query.insertGates(id, resFlow2[i]);
-                }
+                await insertData(resFlow2, domains[i]);
+                await closePage(browser);
                 helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
-                let pages = await browser.pages();
-                if (pages.length > 2) {
-                    await pages[pages.length - 1].close();
-                }
                 continue;
             }
             let resFlow3 = await flow3(domains[i], page);
             if (resFlow3) {
-                // console.log(resFlow3);
+                console.log(resFlow3);
                 // insert into database
-                let id = await query.insertDomain(
-                    domains[i],
-                    resFlow3.length,
-                    "woocommerce"
-                );
-                for (let i = 0; i < resFlow3.length; i++) {
-                    await query.insertGates(id, resFlow3[i]);
-                }
+                await insertData(resFlow3, domains[i]);
+                await closePage(browser);
                 helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
-                let pages = await browser.pages();
-                if (pages.length > 2) {
-                    await pages[pages.length - 1].close();
-                }
                 continue;
             }
             await query.insertDomain(domains[i], 0, "woocommerce");
-            console.log(`${i}: ${domains[i]}: not_exist`);
+            await closePage(browser);
             helper.write("no_exist", domains[i]);
-            let pages = await browser.pages();
-            if (pages.length > 2) {
-                await pages[pages.length - 1].close();
-            }
+            console.log(`${i}: ${domains[i]}: not_exist`);
         } catch (error) {
             console.log(error);
             await query.insertDomain(domains[i], null, "woocommerce");
-            console.log(`${i}: ${domains[i]} MET ERROR`);
+            await closePage(browser);
             helper.write("error", domains[i]);
-            let pages = await browser.pages();
-            if (pages.length > 2) {
-                await pages[pages.length - 1].close();
-            }
+            console.log(`${i}: ${domains[i]} MET ERROR`);
             continue;
         }
     }
