@@ -4,7 +4,7 @@ const query = require("./query");
 
 const setupBrowser = async () => {
     let browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         args: ["--no-sandbox"],
     });
     return browser;
@@ -201,7 +201,7 @@ const main = async () => {
             if (resFlow1) {
                 console.log(resFlow1);
                 // insert into database
-                // await insertData(resFlow1, domains[i]);
+                await insertData(resFlow1, domains[i]);
                 // await closePage(browser);
                 helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
@@ -212,7 +212,7 @@ const main = async () => {
             if (resFlow2) {
                 console.log(resFlow2);
                 // insert into database
-                // await insertData(resFlow2, domains[i]);
+                await insertData(resFlow2, domains[i]);
                 // await closePage(browser);
                 helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
