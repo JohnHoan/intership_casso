@@ -113,13 +113,13 @@ const flow2 = async (domain, page) => {
     await page.goto(linkAPI, { waitUntil: "domcontentloaded" });
     let page1 = await clickOptions(page);
     if (page1) {
-        // console.log("clicked options");
+        console.log("clicked options");
         await page1.waitForSelector(checked[1]);
         await Promise.all([
             page1.click(checked[1]),
             page1.waitForNavigation({ waitUntil: "domcontentloaded" }),
         ]);
-        let res = await finalStep(page1);
+        let res = await finalStep(domain,page1);
         return res;
     }
     await page.waitForSelector(checked[1]);
@@ -139,7 +139,7 @@ const flow3 = async (domain, page) => {
     let checkCart = await helper.cart(hrefs);
     if (!checkCart) return false;
     let [start, end] = helper.setupLoop(hrefs);
-    // console.log(end - start);
+    console.log(end - start);
     let nextlink = "";
     for (let i = start; i < end; i++) {
         checked = await helper.hasAddToCart(domain, hrefs[i]);
@@ -155,13 +155,13 @@ const flow3 = async (domain, page) => {
     });
     let page1 = await clickOptions(page);
     if (page1) {
-        // console.log("clicked options");
+        console.log("clicked options");
         await page1.waitForSelector(checked[1]);
         await Promise.all([
             page1.click(checked[1]),
             page1.waitForNavigation({ waitUntil: "domcontentloaded" }),
         ]);
-        let res = await finalStep(page1);
+        let res = await finalStep(domain,page1);
         return res;
     }
     await page.waitForSelector(checked[1]);
@@ -181,7 +181,7 @@ const flow1 = async (domain, page) => {
     if (!nextlink) return false;
     if (!nextlink.includes("http")) nextlink = `${url}${nextlink}`;
     await page.goto(url, { waitUntil: "domcontentloaded" });
-    await page.goto(nextlink);
+    await page.goto(nextlink,{waitUntil: "domcontentloaded"});
     let res = finalStep(domain, page);
     return res;
 };
