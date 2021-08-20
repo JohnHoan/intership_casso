@@ -58,7 +58,7 @@ const gotoCheckout = async (page) => {
             page.waitForNavigation({ waitUntil: "domcontentloaded" }),
         ]);
     } catch (error) {
-        let url = page.url();
+        let url = await page.url();
         let hrefs = await helper.getAllHrefs(url);
         let checkoutlink = await helper.checkout(hrefs);
         if (!checkoutlink) return false;
@@ -68,7 +68,7 @@ const gotoCheckout = async (page) => {
 };
 
 const gotoCart = async (domain, page) => {
-    let url = page.url();
+    let url = await page.url();
     let hrefs = await helper.getAllHrefs(url);
     let cartLink = await helper.cart(hrefs);
     if (!cartLink) return false;
@@ -180,8 +180,10 @@ const insertData = async (data, domain) => {
 
 const closePage = async (browser) => {
     let pages = await browser.pages();
-    if (!pages.length > 2) return;
-    await pages[pages.length - 1].close();
+    if (pages.length < 2) return;
+    for (let i = 2; i < pages.length; i++) {
+        await pages[i].close();
+    }
     return;
 };
 
