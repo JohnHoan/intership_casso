@@ -218,16 +218,16 @@ const main = async () => {
                 console.log(`${i}: ${domains[i]} Found`);
                 continue;
             }
-            // let resFlow3 = await flow3(domains[i], page);
-            // if (resFlow3) {
-            //     console.log(resFlow3);
-            //     // insert into database
-            //     // await insertData(resFlow3, domains[i]);
-            //     // await closePage(browser);
-            //     helper.write("found", domains[i]);
-            //     console.log(`${i}: ${domains[i]} Found`);
-            //     continue;
-            // }
+            let resFlow3 = await flow3(domains[i], page);
+            if (resFlow3) {
+                console.log(resFlow3);
+                // insert into database
+                await insertData(resFlow3, domains[i]);
+                // await closePage(browser);
+                helper.write("found", domains[i]);
+                console.log(`${i}: ${domains[i]} Found`);
+                continue;
+            }
             await query.insertDomain(domains[i], 0, "woocommerce");
             // await closePage(browser);
             helper.write("no_exist", domains[i]);
