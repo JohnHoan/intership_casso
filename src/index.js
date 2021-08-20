@@ -178,14 +178,14 @@ const insertData = async (data, domain) => {
     }
 };
 
-const closePage = async (browser) => {
-    let pages = await browser.pages();
-    if (pages.length < 2) return;
-    for (let i = 2; i < pages.length; i++) {
-        await pages[i].close();
-    }
-    return;
-};
+// const closePage = async (browser) => {
+//     let pages = await browser.pages();
+//     if (pages.length < 2) return;
+//     for (let i = 2; i < pages.length; i++) {
+//         await pages[i].close();
+//     }
+//     return;
+// };
 
 const main = async () => {
     let domains = await helper.readDomains();
@@ -201,7 +201,7 @@ const main = async () => {
                 // console.log(resFlow1);
                 // insert into database
                 await insertData(resFlow1, domains[i]);
-                await closePage(browser);
+                // await closePage(browser);
                 helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
                 continue;
@@ -212,7 +212,7 @@ const main = async () => {
                 // console.log(resFlow2);
                 // insert into database
                 await insertData(resFlow2, domains[i]);
-                await closePage(browser);
+                // await closePage(browser);
                 helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
                 continue;
@@ -222,19 +222,19 @@ const main = async () => {
                 console.log(resFlow3);
                 // insert into database
                 await insertData(resFlow3, domains[i]);
-                await closePage(browser);
+                // await closePage(browser);
                 helper.write("found", domains[i]);
                 console.log(`${i}: ${domains[i]} Found`);
                 continue;
             }
             await query.insertDomain(domains[i], 0, "woocommerce");
-            await closePage(browser);
+            // await closePage(browser);
             helper.write("no_exist", domains[i]);
             console.log(`${i}: ${domains[i]}: not_exist`);
         } catch (error) {
             console.log(error);
             await query.insertDomain(domains[i], null, "woocommerce");
-            await closePage(browser);
+            // await closePage(browser);
             helper.write("error", domains[i]);
             console.log(`${i}: ${domains[i]} MET ERROR`);
             continue;
