@@ -196,7 +196,7 @@ const main = async () => {
     let page = await setupPage(browser);
     for (let i = 0; i < domains.length; i++) {
         try {
-            if (helper.isExist(domains[i])) continue;
+            // if (helper.isExist(domains[i])) continue;
             console.log(`running: ${domains[i]}`);
             let resFlow1 = await flow1(domains[i], page);
             if (resFlow1) {
@@ -219,16 +219,16 @@ const main = async () => {
                 console.log(`${i}: ${domains[i]} Found`);
                 continue;
             }
-           // let resFlow3 = await flow3(domains[i], page);
-           // if (resFlow3) {
-             //   console.log(resFlow3);
-                // insert into database
-               // await insertData(resFlow3, domains[i]);
-                // await closePage(browser);
-               // helper.write("found", domains[i]);
-               // console.log(`${i}: ${domains[i]} Found`);
-               // continue;
-           // }
+           let resFlow3 = await flow3(domains[i], page);
+           if (resFlow3) {
+               console.log(resFlow3);
+                insert into database
+               await insertData(resFlow3, domains[i]);
+                await closePage(browser);
+               helper.write("found", domains[i]);
+               console.log(`${i}: ${domains[i]} Found`);
+               continue;
+           }
             await query.insertDomain(domains[i], 0, "woocommerce");
             // await closePage(browser);
             helper.write("no_exist", domains[i]);

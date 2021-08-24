@@ -65,7 +65,7 @@ const getAllHrefs = async (url) => {
 /* read domains from the domains.txt */
 const readDomains = async () => {
     let domains = [];
-    fs.readFileSync("./src/domains.txt", "utf-8")
+    fs.readFileSync("./src/test.txt", "utf-8")
         .split(/\r?\n/)
         .forEach(function (line) {
             domains.push(line);
@@ -154,7 +154,7 @@ const setupLoop = (arr) => {
 const purifyGates = async (arr) => {
     let res = [];
     for (let i = 0; i < arr.length; i++) {
-        let pGate = arr[i].split(" ")[1];
+        // let pGate = arr[i].split(" ")[1];
         if (pGate.includes("method_bacs")) {
             res.push("method_bacs");
             continue;
