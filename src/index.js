@@ -148,7 +148,8 @@ const flow3 = async (domain, page) => {
     console.log(end - start);
     let nextlink = "";
     for (let i = start; i < end; i++) {
-        console.log(hrefs[i]);
+        // console.log(hrefs[i]);
+	if(hrefs[i].includes('.apk')) continue;
         checked = await helper.hasAddToCart(domain, hrefs[i]);
         if (checked[0]) {
             nextlink = hrefs[i];
@@ -218,16 +219,16 @@ const main = async () => {
                 console.log(`${i}: ${domains[i]} Found`);
                 continue;
             }
-            let resFlow3 = await flow3(domains[i], page);
-            if (resFlow3) {
-                console.log(resFlow3);
+           // let resFlow3 = await flow3(domains[i], page);
+           // if (resFlow3) {
+             //   console.log(resFlow3);
                 // insert into database
-                await insertData(resFlow3, domains[i]);
+               // await insertData(resFlow3, domains[i]);
                 // await closePage(browser);
-                helper.write("found", domains[i]);
-                console.log(`${i}: ${domains[i]} Found`);
-                continue;
-            }
+               // helper.write("found", domains[i]);
+               // console.log(`${i}: ${domains[i]} Found`);
+               // continue;
+           // }
             await query.insertDomain(domains[i], 0, "woocommerce");
             // await closePage(browser);
             helper.write("no_exist", domains[i]);
